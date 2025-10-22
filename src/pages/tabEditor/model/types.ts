@@ -9,17 +9,23 @@ export interface Measure {
 
 export interface Beat {
   notes: Array<Note>
+  duration: number
+}
+
+export interface Subnote {
+  fret: Nullable<number>
+  note: Nullable<string>
   isRest: boolean
 }
 
 export interface Note {
-  note: Nullable<string>
-  fret: Nullable<number>
-  duration: number
+  subnotes: Array<Subnote>
+  isRest: boolean
 }
 
 export interface Cursor {
   measure: number
   beat: number
   note: number
+  subnote: number
 }

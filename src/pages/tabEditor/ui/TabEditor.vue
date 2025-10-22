@@ -1,30 +1,59 @@
 <template>
   <div class="container">
     <div class="inner">
-      <div v-for="(measure, i) in scoreData.measures" :key="`measure-${i}`" class="bar">
-        <div class="table">
-          <div class="row"></div>
-          <div class="row"></div>
-          <div class="row"></div>
-        </div>
-        <div class="grid">
-          <template v-for="(beat, j) in measure.beats">
-            <template v-for="(note, k) in beat.notes">
-              <VNote
-                v-if="note"
-                ref="notes"
-                :key="`measure-${i}_bar-${j}_note-${k}`"
-                :class="{
-                  active:
-                    JSON.stringify(cursor) === JSON.stringify({ measure: i, beat: j, note: k }),
-                  playing: playbackCursor.measure === i && playbackCursor.beat === j && isPlaying,
-                }"
-                :fret="note.fret"
-                :duration="note.duration"
-              />
-            </template>
+      <div class="controls">
+        <div class="tempo">
+          <template v-if="isEditTempo">
+            <div class="input">
+              <input v-model="tempoDraft" type="text" />
+              <div v-if="wasSubmitted && hasError" class="errorLabel">Введите корректный темп</div>
+            </div>
+            <button @click="handleSaveTempo">Сохранить</button>
+          </template>
+          <template v-else>
+            BPM: {{ scoreData.tempo }}
+            <button @click="handleEditTempo">edit</button>
           </template>
         </div>
+      </div>
+      <div class="score">
+        <div v-for="(measure, i) in scoreData.measures" :key="`measure-${i}`" class="bar">
+          <div class="table">
+            <div class="row"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+          </div>
+          <div class="grid">
+            <template v-for="(beat, j) in measure.beats">
+              <div
+                v-for="(note, k) in beat.notes"
+                :key="`measure-${i}_bar-${j}_note-${k}`"
+                class="noteContainer"
+              >
+                <template v-for="(subnote, l) in note.subnotes">
+                  <VNote
+                    v-if="note"
+                    ref="notes"
+                    :key="`measure-${i}_bar-${j}_note-${k}_subnote-${l}`"
+                    :fret="subnote.fret"
+                    :class="{
+                      active:
+                        JSON.stringify(cursor) ===
+                        JSON.stringify({ measure: i, beat: j, note: k, subnote: l }),
+                      playing:
+                        playbackCursor.measure === i &&
+                        playbackCursor.beat === j &&
+                        playbackCursor.note === k &&
+                        isPlaying,
+                    }"
+                    @click="moveCursor(i, j, k, l)"
+                  />
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="durations"></div>
       </div>
     </div>
   </div>
@@ -32,7 +61,7 @@
 
 <script setup lang="ts">
 import type { Ref } from 'vue'
-import type { Score, Cursor, Measure } from '../model'
+import type { Score, Cursor, Measure, Note } from '../model'
 
 import { ref } from 'vue'
 import { onKeyStroke } from '@vueuse/core'
@@ -42,17 +71,84 @@ import VNote from './VNote.vue'
 
 const TUNE = ['E1', 'A1', 'D2', 'G2'].reverse()
 
-const cursor: Ref<Cursor> = ref({ measure: 0, beat: 0, note: 0 })
-const playbackCursor: Ref<{ measure: number; beat: number }> = ref({ measure: 0, beat: 0 })
-const isPlaying: Ref<boolean> = ref(true)
+const isEditTempo: Ref<boolean> = ref(false)
+const tempoDraft: Ref<Nullable<string>> = ref(null)
+const wasSubmitted: Ref<boolean> = ref(false)
+const hasError: Ref<boolean> = ref(false)
+
+const handleSaveTempo = (): void => {
+  wasSubmitted.value = true
+
+  const tempo = Number(tempoDraft.value)
+
+  if (!tempo) {
+    hasError.value = true
+    return
+  }
+
+  scoreData.value.tempo = tempo
+  wasSubmitted.value = false
+  hasError.value = false
+  isEditTempo.value = false
+}
+
+const handleEditTempo = () => {
+  isEditTempo.value = true
+}
+
+const cursor: Ref<Cursor> = ref({ measure: 0, beat: 0, note: 0, subnote: 0 })
+const playbackCursor: Ref<{ measure: number; beat: number; note: number }> = ref({
+  measure: 0,
+  beat: 0,
+  note: 0,
+})
+const isPlaying: Ref<boolean> = ref(false)
 const synth = new Tone.PolySynth().toDestination()
 
 const scoreData: Ref<Score> = ref({
-  tempo: 127,
+  tempo: 80,
   measures: [getDefaultMeasure()],
 })
 
+const moveCursor = (measure: number, beat: number, note: number, subnote: number) => {
+  cursor.value = { measure, beat, note, subnote }
+}
+
+const getBeatDuration = (measureIndex: number, beatIndex: number): number =>
+  scoreData.value.measures[measureIndex].beats[beatIndex].duration
+
+onKeyStroke(['F1', 'F2', 'F3'], (e) => {
+  const duration = Number(e.key[1])
+
+  const { measure, beat } = cursor.value
+  scoreData.value.measures[measure].beats[beat].duration = duration
+
+  scoreData.value.measures[measure].beats[beat].notes.forEach((note) => {
+    const prevNotes = note.subnotes.filter((v) => v.note !== null) ?? [
+      { note: null, fret: null, isRest: false },
+    ]
+    note.subnotes = prevNotes
+      .concat([
+        { note: null, fret: null, isRest: false },
+        { note: null, fret: null, isRest: false },
+        { note: null, fret: null, isRest: false },
+      ])
+      .slice(0, duration)
+  })
+})
+
 onKeyStroke('ArrowRight', () => {
+  const { measure, beat, note } = cursor.value
+  if (
+    scoreData.value.measures[measure].beats[beat].notes[note].subnotes.length - 1 >
+    cursor.value.subnote
+  ) {
+    cursor.value.subnote += 1
+    return
+  }
+
+  cursor.value.subnote = 0
+
   if (cursor.value.beat !== 3) {
     cursor.value.beat += 1
     return
@@ -67,15 +163,28 @@ onKeyStroke('ArrowRight', () => {
 })
 
 onKeyStroke('ArrowLeft', () => {
+  const { measure, beat, note } = cursor.value
+
+  if (cursor.value.subnote > 0) {
+    cursor.value.subnote -= 1
+    return
+  }
+
   if (cursor.value.measure === 0 && cursor.value.beat === 0) return
 
   if (cursor.value.beat > 0) {
     cursor.value.beat -= 1
+    cursor.value.subnote =
+      scoreData.value.measures[measure].beats[beat - 1].notes[note].subnotes.length - 1
     return
   }
 
   cursor.value.measure -= 1
   cursor.value.beat = scoreData.value.measures[cursor.value.measure].beats.length - 1
+  cursor.value.subnote = Math.max(
+    0,
+    scoreData.value.measures[measure].beats[cursor.value.beat].notes[note].subnotes.length - 1,
+  )
 
   if (
     isMeasureEmpty(scoreData.value.measures[cursor.value.measure + 1]) &&
@@ -98,19 +207,19 @@ onKeyStroke('ArrowDown', () => {
 })
 
 onKeyStroke([...Array(10).keys()].map(String), (e) => {
-  const { measure, beat, note } = cursor.value
+  const { measure, beat, note, subnote } = cursor.value
 
   const n = pitchToNote(e.key, TUNE[note])
   synth.triggerAttackRelease(n, 0.1)
-  scoreData.value.measures[measure].beats[beat].notes[note].note = n
-  scoreData.value.measures[measure].beats[beat].notes[note].fret = e.key
+  scoreData.value.measures[measure].beats[beat].notes[note].subnotes[subnote].note = n
+  scoreData.value.measures[measure].beats[beat].notes[note].subnotes[subnote].fret = e.key
 })
 
 onKeyStroke('Backspace', () => {
-  const { measure, beat, note } = cursor.value
+  const { measure, beat, note, subnote } = cursor.value
 
-  scoreData.value.measures[measure].beats[beat].notes[note].note = null
-  scoreData.value.measures[measure].beats[beat].notes[note].fret = null
+  scoreData.value.measures[measure].beats[beat].notes[note].subnotes[subnote].note = null
+  scoreData.value.measures[measure].beats[beat].notes[note].subnotes[subnote].fret = null
 })
 
 async function playScore() {
@@ -125,7 +234,7 @@ async function playScore() {
   Tone.getTransport().bpm.value = scoreData.value.tempo
 
   const part = new Tone.Part((time, chord) => {
-    const validNotes = chord.filter((note: Nullable<string>) => note !== null)
+    const validNotes = chord.filter((note: Array<Note>) => note !== null)
     if (validNotes.length > 0) {
       synth.triggerAttackRelease(validNotes, '4n', time - 0.5)
     }
@@ -136,7 +245,7 @@ async function playScore() {
 
   scoreData.value.measures.forEach((measure) => {
     measure.beats.forEach((beat) => {
-      const notes = beat.notes.map((note) => note.note)
+      const notes = beat.notes.map((note: Note) => note.subnotes[0].note)
       part.add(currentTime, notes)
       currentTime += beatDuration
       setTimeout(() => incrementPlaybackCursor(), currentTime * 1000)
@@ -181,12 +290,19 @@ const pitchToNote = (pitch: number, openStringNote: string): string => {
 
 const isMeasureEmpty = (measure: Measure): boolean =>
   measure.beats.every((beat) => {
-    return beat.notes.every((note) => note.note === null)
+    return beat.notes.every((note) => note.subnotes[0].note === null)
   })
 </script>
 
 <style scoped lang="scss">
 .inner {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.score {
   position: relative;
   display: flex;
   flex-wrap: wrap;
@@ -228,5 +344,16 @@ const isMeasureEmpty = (measure: Measure): boolean =>
     background-color: #3333ff66;
     border-radius: 1rem;
   }
+}
+
+.tempo {
+  display: flex;
+  justify-content: space-between;
+  width: 30%;
+}
+
+.noteContainer {
+  display: flex;
+  gap: 0.4rem;
 }
 </style>

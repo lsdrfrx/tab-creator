@@ -9,7 +9,6 @@
 <script setup lang="ts">
 interface Props {
   fret: Nullable<number>
-  duration: number
 }
 
 defineProps<Props>()
@@ -21,6 +20,7 @@ defineProps<Props>()
   justify-content: center;
   width: 2rem;
   height: 2rem;
+  cursor: pointer;
 
   &.active {
     border-radius: 0.5rem;
