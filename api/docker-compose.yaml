@@ -1,0 +1,14 @@
+services:
+  db:
+    image: mongo:latest
+    container_name: "db"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=tabcreator
+      - MONGO_INITDB_ROOT_PASSWORD=tabcreator
+    ports:
+      - 27017:27017
+    volumes:
+      - db:/data/db
+
+volumes:
+  db:

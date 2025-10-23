@@ -1,4 +1,4 @@
-import type { Measure } from '../model'
+import type { Measure } from '@/types'
 
 export const getDefaultMeasure = (): Measure => ({
   beats: [

@@ -1,4 +1,4 @@
-import TabEditor from '@/pages/tabEditor'
+import { TabEditor } from '@/pages'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({

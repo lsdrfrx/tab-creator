@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { VAppbar } from '../appbar'
-import { VDrawer } from '../drawer'
+import { VSidebar } from '../sidebar'
 </script>
 
 <style scoped lang="scss"></style>

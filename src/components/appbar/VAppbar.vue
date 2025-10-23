@@ -1,16 +1,22 @@
 <template>
-  <div class="container">
-    <b>ICON</b>
+  <div class="wrapper">
+    <div class="btn" @click="$emit('toggleDrawer')">
+      <b>ICON</b>
+    </div>
     <div class="navbar">
       <div class="action">Кнопка</div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+defineEmits<{
+  toggleDrawer: []
+}>()
+</script>
 
 <style scoped lang="scss">
-.container {
+.wrapper {
   height: 6.4rem;
   width: 100%;
   display: flex;
@@ -22,5 +28,9 @@
 .navbar {
   display: flex;
   gap: 3.2rem;
+}
+
+.btn {
+  cursor: pointer;
 }
 </style>

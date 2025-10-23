@@ -1,73 +1,80 @@
 <template>
-  <div class="container">
-    <div class="inner">
-      <div class="controls">
-        <div class="tempo">
-          <template v-if="isEditTempo">
-            <div class="input">
-              <input v-model="tempoDraft" type="text" />
-              <div v-if="wasSubmitted && hasError" class="errorLabel">Введите корректный темп</div>
-            </div>
-            <button @click="handleSaveTempo">Сохранить</button>
-          </template>
-          <template v-else>
-            BPM: {{ scoreData.tempo }}
-            <button @click="handleEditTempo">edit</button>
-          </template>
-        </div>
-      </div>
-      <div class="score">
-        <div v-for="(measure, i) in scoreData.measures" :key="`measure-${i}`" class="bar">
-          <div class="table">
-            <div class="row"></div>
-            <div class="row"></div>
-            <div class="row"></div>
-          </div>
-          <div class="grid">
-            <template v-for="(beat, j) in measure.beats">
-              <div
-                v-for="(note, k) in beat.notes"
-                :key="`measure-${i}_bar-${j}_note-${k}`"
-                class="noteContainer"
-              >
-                <template v-for="(subnote, l) in note.subnotes">
-                  <VNote
-                    v-if="note"
-                    ref="notes"
-                    :key="`measure-${i}_bar-${j}_note-${k}_subnote-${l}`"
-                    :fret="subnote.fret"
-                    :class="{
-                      active:
-                        JSON.stringify(cursor) ===
-                        JSON.stringify({ measure: i, beat: j, note: k, subnote: l }),
-                      playing:
-                        playbackCursor.measure === i &&
-                        playbackCursor.beat === j &&
-                        playbackCursor.note === k &&
-                        isPlaying,
-                    }"
-                    @click="moveCursor(i, j, k, l)"
-                  />
-                </template>
+  <MainLayout>
+    <div v-if="scoreId" class="container">
+      <div class="inner">
+        <div class="controls">
+          <div class="tempo">
+            <template v-if="isEditTempo">
+              <div class="input">
+                <input v-model="tempoDraft" type="text" />
+                <div v-if="wasSubmitted && hasError" class="errorLabel">
+                  Введите корректный темп
+                </div>
               </div>
+              <button @click="handleSaveTempo">Сохранить</button>
+            </template>
+            <template v-else>
+              BPM: {{ scoreData.tempo }}
+              <button @click="handleEditTempo">edit</button>
             </template>
           </div>
+          <button @click="saveScore">Сохранить партитуру</button>
         </div>
-        <div class="durations"></div>
+        <div class="score">
+          <div v-for="(measure, i) in scoreData.measures" :key="`measure-${i}`" class="bar">
+            <div class="table">
+              <div class="row"></div>
+              <div class="row"></div>
+              <div class="row"></div>
+            </div>
+            <div class="grid">
+              <template v-for="(beat, j) in measure.beats">
+                <div
+                  v-for="(note, k) in beat.notes"
+                  :key="`measure-${i}_bar-${j}_note-${k}`"
+                  class="noteContainer"
+                >
+                  <template v-for="(subnote, l) in note.subnotes">
+                    <VNote
+                      v-if="note"
+                      ref="notes"
+                      :key="`measure-${i}_bar-${j}_note-${k}_subnote-${l}`"
+                      :fret="subnote.fret"
+                      :class="{
+                        active:
+                          JSON.stringify(cursor) ===
+                          JSON.stringify({ measure: i, beat: j, note: k, subnote: l }),
+                        playing:
+                          playbackCursor.measure === i &&
+                          playbackCursor.beat === j &&
+                          playbackCursor.note === k &&
+                          isPlaying,
+                      }"
+                      @click="moveCursor(i, j, k, l)"
+                    />
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+          <div class="durations"></div>
+        </div>
       </div>
     </div>
-  </div>
+  </MainLayout>
 </template>
 
 <script setup lang="ts">
 import type { Ref } from 'vue'
-import type { Score, Cursor, Measure, Note } from '../model'
+import type { Score, Cursor, Measure, Note } from '@/types'
 
 import { ref } from 'vue'
-import { onKeyStroke } from '@vueuse/core'
+import { onKeyStroke, useFetch } from '@vueuse/core'
 import * as Tone from 'tone'
 import { getDefaultMeasure } from './data'
-import VNote from './VNote.vue'
+import { VNote } from '@/components/editor'
+import { useScoreStore } from '@/composables'
+import { MainLayout } from '@/layouts'
 
 const TUNE = ['E1', 'A1', 'D2', 'G2'].reverse()
 
@@ -75,6 +82,8 @@ const isEditTempo: Ref<boolean> = ref(false)
 const tempoDraft: Ref<Nullable<string>> = ref(null)
 const wasSubmitted: Ref<boolean> = ref(false)
 const hasError: Ref<boolean> = ref(false)
+
+const scoreId: Ref<Nullable<string>> = ref(null)
 
 const handleSaveTempo = (): void => {
   wasSubmitted.value = true
@@ -90,6 +99,10 @@ const handleSaveTempo = (): void => {
   wasSubmitted.value = false
   hasError.value = false
   isEditTempo.value = false
+}
+
+const saveScore = () => {
+  useFetch('http://localhost:3000/')
 }
 
 const handleEditTempo = () => {
