@@ -12,3 +12,18 @@ html {
   font-family: 'Roboto', sans-serif;
   font-optical-sizing: auto;
 }
+
+.skeleton {
+  animation: fading 1.5s ease-in-out infinite alternate;
+  background-color: #bbb;
+  border-radius: 0.5rem;
+}
+
+@keyframes fading {
+    from {
+      opacity: 0.2;
+    }
+    to {
+        opacity: 1;
+    }
+}

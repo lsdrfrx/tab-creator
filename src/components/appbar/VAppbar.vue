@@ -1,6 +1,6 @@
 <template>
   <div class="wrapper">
-    <div class="btn" @click="$emit('toggleDrawer')">
+    <div class="btn" @click="$emit('toggleSidebar')">
       <b>ICON</b>
     </div>
     <div class="navbar">
@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 defineEmits<{
-  toggleDrawer: []
+  toggleSidebar: []
 }>()
 </script>
 

@@ -1,33 +1,48 @@
 <template>
-  <div class="sidebar">
-    <div class="list">
-      <div v-for="(score, i) in scores" :key="`score-${i}`" class="item">{{ score.title }}</div>
-    </div>
-    <button @click="fetchScores">+</button>
+  <VSidebarSkeleton v-if="isLoading" />
+  <div v-else class="sidebar">
+    <VList>
+      <ListItem
+        v-for="{ _id, title } in scores"
+        :key="`score-${_id}`"
+        :title
+        class="item"
+        @click="selectScore(_id)"
+      />
+    </VList>
+    <button @click="handleCreate">Новая партитура</button>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Ref } from 'vue'
-import type { Score } from '@/pages/tabEditor/model'
 
-import { ref, onMounted } from 'vue'
-import { useFetch } from '@vueuse/core'
+import { ref } from 'vue'
+import { onMounted } from 'vue'
+import { useScoreStore } from '@/composables'
+import VSidebarSkeleton from './VSidebarSkeleton.vue'
+import { ListItem, VList } from '../list'
 
-const scores: Ref<Array<Record<string, Score>>> = ref([])
+const { scores, selectedScore, fetchScores, createScore, selectScore } = useScoreStore()
 
-const fetchScores = async () => {
-  console.log('AAAA')
-  const response = await useFetch('http://localhost:3000/score')
+const isLoading: Ref<boolean> = ref(false)
 
-  if (response.statusCode.value !== 200) return
-
-  const data = JSON.parse(response.data.value as string)
-
-  scores.value = data
+const handleCreate = async () => {
+  toggleLoading()
+  const isCreated = await createScore()
+  toggleLoading()
 }
 
-onMounted(async () => await fetchScores)
+const toggleLoading = () => {
+  isLoading.value = !isLoading.value
+}
+
+onMounted(async () => {
+  toggleLoading()
+  await new Promise((resolve) => setTimeout(resolve, 5000))
+  await fetchScores()
+  toggleLoading()
+})
 </script>
 
 <style scoped lang="scss">
@@ -36,20 +51,9 @@ onMounted(async () => await fetchScores)
   flex-direction: column;
   gap: 0.8rem;
   width: 30rem;
+  min-width: 30rem;
   border-right: 1px solid #999999;
   padding: 1rem;
   height: calc(100vh - 6.4rem);
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.item {
-  height: 3rem;
-  padding: 0.8rem;
-  border: 1px solid #999999;
 }
 </style>

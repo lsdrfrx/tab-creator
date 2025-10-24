@@ -1,8 +1,21 @@
 <template>
   <MainLayout>
-    <div v-if="scoreId" class="container">
+    <div v-if="scoreData" class="container">
       <div class="inner">
         <div class="controls">
+          <div class="name">
+            <template v-if="isEditTitle">
+              <div class="input">
+                <input v-model="titleDraft" type="text" />
+                <div v-if="wasSubmitted && hasError" class="errorLabel">Введите корректное имя</div>
+              </div>
+              <button @click="handleSaveTitle">Сохранить</button>
+            </template>
+            <template v-else>
+              {{ scoreData.title }}
+              <button @click="handleEditTitle">edit</button>
+            </template>
+          </div>
           <div class="tempo">
             <template v-if="isEditTempo">
               <div class="input">
@@ -18,7 +31,7 @@
               <button @click="handleEditTempo">edit</button>
             </template>
           </div>
-          <button @click="saveScore">Сохранить партитуру</button>
+          <button @click="handleSave">Сохранить партитуру</button>
         </div>
         <div class="score">
           <div v-for="(measure, i) in scoreData.measures" :key="`measure-${i}`" class="bar">
@@ -68,22 +81,24 @@
 import type { Ref } from 'vue'
 import type { Score, Cursor, Measure, Note } from '@/types'
 
-import { ref } from 'vue'
-import { onKeyStroke, useFetch } from '@vueuse/core'
+import { ref, watch } from 'vue'
+import { onKeyStroke } from '@vueuse/core'
 import * as Tone from 'tone'
 import { getDefaultMeasure } from './data'
 import { VNote } from '@/components/editor'
 import { useScoreStore } from '@/composables'
 import { MainLayout } from '@/layouts'
 
+const { selectedScore, saveScore } = useScoreStore()
+
 const TUNE = ['E1', 'A1', 'D2', 'G2'].reverse()
 
+const isEditTitle: Ref<boolean> = ref(false)
 const isEditTempo: Ref<boolean> = ref(false)
+const titleDraft: Ref<Nullable<string>> = ref(null)
 const tempoDraft: Ref<Nullable<string>> = ref(null)
 const wasSubmitted: Ref<boolean> = ref(false)
 const hasError: Ref<boolean> = ref(false)
-
-const scoreId: Ref<Nullable<string>> = ref(null)
 
 const handleSaveTempo = (): void => {
   wasSubmitted.value = true
@@ -101,12 +116,34 @@ const handleSaveTempo = (): void => {
   isEditTempo.value = false
 }
 
-const saveScore = () => {
-  useFetch('http://localhost:3000/')
-}
-
 const handleEditTempo = () => {
   isEditTempo.value = true
+}
+
+const handleSaveTitle = (): void => {
+  wasSubmitted.value = true
+
+  const title = String(titleDraft.value)
+
+  if (!title) {
+    hasError.value = true
+    return
+  }
+
+  scoreData.value.title = title
+  wasSubmitted.value = false
+  hasError.value = false
+  isEditTitle.value = false
+}
+
+const handleEditTitle = (): void => {
+  isEditTitle.value = true
+}
+
+const handleSave = async () => {
+  if (!scoreData.value) return
+
+  await saveScore(scoreData.value)
 }
 
 const cursor: Ref<Cursor> = ref({ measure: 0, beat: 0, note: 0, subnote: 0 })
@@ -118,9 +155,11 @@ const playbackCursor: Ref<{ measure: number; beat: number; note: number }> = ref
 const isPlaying: Ref<boolean> = ref(false)
 const synth = new Tone.PolySynth().toDestination()
 
-const scoreData: Ref<Score> = ref({
-  tempo: 80,
-  measures: [getDefaultMeasure()],
+const scoreData: Ref<Nullable<Score>> = ref(null)
+
+watch(selectedScore, () => {
+  if (!selectedScore.value) return
+  scoreData.value = selectedScore.value
 })
 
 const moveCursor = (measure: number, beat: number, note: number, subnote: number) => {

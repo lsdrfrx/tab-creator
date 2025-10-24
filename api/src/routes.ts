@@ -1,4 +1,4 @@
-import Elysia from 'elysia'
+import Elysia, { t } from 'elysia'
 import { Score } from './db'
 
 const scoreRouter = new Elysia({ prefix: '/score' })
@@ -54,6 +54,9 @@ scoreRouter.post('/new', async () => {
 
 scoreRouter.delete('/:id', async ({ params: { id } }) => await Score.findByIdAndDelete(id))
 
-scoreRouter.patch('/:id', ({ params: { id }, body }) => `${id}: ${body}`)
+scoreRouter.patch('/:id', async ({ body, params: { id } }) => {
+  console.log(body)
+  return await Score.findByIdAndUpdate(id, body)
+})
 
 export { scoreRouter }
