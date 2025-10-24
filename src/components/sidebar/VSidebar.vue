@@ -6,11 +6,12 @@
         v-for="{ _id, title } in scores"
         :key="`score-${_id}`"
         :title
+        :active="selectedScore?._id === _id"
         class="item"
         @click="selectScore(_id)"
       />
     </VList>
-    <button @click="handleCreate">Новая партитура</button>
+    <VButton text="Новая партитура" @click="handleCreate" />
   </div>
 </template>
 
@@ -22,6 +23,7 @@ import { onMounted } from 'vue'
 import { useScoreStore } from '@/composables'
 import VSidebarSkeleton from './VSidebarSkeleton.vue'
 import { ListItem, VList } from '../list'
+import VButton from '../button/VButton.vue'
 
 const { scores, selectedScore, fetchScores, createScore, selectScore } = useScoreStore()
 
@@ -39,7 +41,6 @@ const toggleLoading = () => {
 
 onMounted(async () => {
   toggleLoading()
-  await new Promise((resolve) => setTimeout(resolve, 5000))
   await fetchScores()
   toggleLoading()
 })
