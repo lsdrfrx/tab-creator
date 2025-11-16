@@ -24,18 +24,20 @@ defineProps<Props>()
 
   &.active {
     border-radius: 0.5rem;
-    background-color: #2843fa;
+    background-color: var(--button-filled-bg);
+    color: var(--background-primary);
 
     & .label {
-      color: #2843fa;
+      background-color: var(--button-filled-bg);
     }
   }
 
   & .label {
+    border-radius: 0.5rem;
     text-align: center;
     padding: 0 0.2rem;
     width: 100%;
-    background-color: white;
+    background-color: var(--background-primary);
   }
 }
 </style>
