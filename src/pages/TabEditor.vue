@@ -1,38 +1,13 @@
 <template>
   <MainLayout>
-    <div v-if="scoreData" class="container">
+    <template v-if="scoreData">
       <div class="inner">
-        <div class="controls">
-          <div class="name">
-            <template v-if="isEditTitle">
-              <div class="input">
-                <input v-model="titleDraft" type="text" />
-                <div v-if="wasSubmitted && hasError" class="errorLabel">Введите корректное имя</div>
-              </div>
-              <button @click="handleSaveTitle">Сохранить</button>
-            </template>
-            <template v-else>
-              {{ scoreData.title }}
-              <button @click="handleEditTitle">edit</button>
-            </template>
-          </div>
-          <div class="tempo">
-            <template v-if="isEditTempo">
-              <div class="input">
-                <input v-model="tempoDraft" type="text" />
-                <div v-if="wasSubmitted && hasError" class="errorLabel">
-                  Введите корректный темп
-                </div>
-              </div>
-              <button @click="handleSaveTempo">Сохранить</button>
-            </template>
-            <template v-else>
-              BPM: {{ scoreData.tempo }}
-              <button @click="handleEditTempo">edit</button>
-            </template>
-          </div>
-          <button @click="handleSave">Сохранить партитуру</button>
-        </div>
+        <EditorControls
+          :tempo="scoreData.tempo"
+          :title="scoreData.title"
+          :isEditTempo
+          :isEditTitle
+        />
         <div class="score">
           <div v-for="(measure, i) in scoreData.measures" :key="`measure-${i}`" class="bar">
             <div class="table">
@@ -73,7 +48,7 @@
           <div class="durations"></div>
         </div>
       </div>
-    </div>
+    </template>
   </MainLayout>
 </template>
 
@@ -88,6 +63,7 @@ import { getDefaultMeasure } from './data'
 import { VNote } from '@/components/editor'
 import { useScoreStore } from '@/composables'
 import { MainLayout } from '@/layouts'
+import EditorControls from './EditorControls.vue'
 
 const { selectedScore, saveScore } = useScoreStore()
 
@@ -246,13 +222,15 @@ onKeyStroke('ArrowLeft', () => {
   }
 })
 
-onKeyStroke('ArrowUp', () => {
+onKeyStroke('ArrowUp', (event) => {
+  event.preventDefault()
   if (cursor.value.note === 0) return
 
   cursor.value.note -= 1
 })
 
 onKeyStroke('ArrowDown', () => {
+  event.preventDefault()
   if (cursor.value.note === 3) return
 
   cursor.value.note += 1
@@ -352,6 +330,7 @@ const isMeasureEmpty = (measure: Measure): boolean =>
   width: 100%;
   flex-direction: column;
   gap: 3rem;
+  margin-bottom: 20rem;
 }
 
 .score {
@@ -396,12 +375,6 @@ const isMeasureEmpty = (measure: Measure): boolean =>
     background-color: #3333ff66;
     border-radius: 1rem;
   }
-}
-
-.tempo {
-  display: flex;
-  justify-content: space-between;
-  width: 30%;
 }
 
 .noteContainer {
