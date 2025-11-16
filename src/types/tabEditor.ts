@@ -1,5 +1,5 @@
 export interface Score {
-  _id: string
+  id: string
   title: string
   measures: Array<Measure>
   tempo: number

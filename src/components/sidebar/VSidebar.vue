@@ -1,17 +1,17 @@
 <template>
   <VSidebarSkeleton v-if="isLoading" />
   <div v-else class="sidebar">
+    <VButton class="btn" variant="filled" text="Новая партитура" @click="handleCreate" />
     <VList>
       <ListItem
-        v-for="{ _id, title } in scores"
-        :key="`score-${_id}`"
+        v-for="{ title, id } in scores"
+        :key="`score-${id}`"
         :title
-        :active="selectedScore?._id === _id"
+        :active="selectedScore?.id === id"
         class="item"
-        @click="selectScore(_id)"
+        @click="selectScore(id)"
       />
     </VList>
-    <VButton text="Новая партитура" @click="handleCreate" />
   </div>
 </template>
 
@@ -21,8 +21,8 @@ import type { Ref } from 'vue'
 import { ref } from 'vue'
 import { onMounted } from 'vue'
 import { useScoreStore } from '@/composables'
-import VSidebarSkeleton from './VSidebarSkeleton.vue'
 import { ListItem, VList } from '../list'
+import VSidebarSkeleton from './VSidebarSkeleton.vue'
 import VButton from '../button/VButton.vue'
 
 const { scores, selectedScore, fetchScores, createScore, selectScore } = useScoreStore()
@@ -53,8 +53,12 @@ onMounted(async () => {
   gap: 0.8rem;
   width: 30rem;
   min-width: 30rem;
-  border-right: 1px solid #999999;
+  border-right: 1px solid var(--color-border);
   padding: 1rem;
   height: calc(100vh - 6.4rem);
+}
+
+.btn {
+  width: 100%;
 }
 </style>

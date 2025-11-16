@@ -19,7 +19,7 @@ const scoreStore = (): ScoreStore => {
   const selectedScore: ScoreStore['selectedScore'] = ref(null)
 
   const fetchScores: ScoreStore['fetchScores'] = async () => {
-    const response = await useFetch('http://localhost:3000/score')
+    const response = await useFetch('http://localhost:4000/score')
 
     if (response.statusCode.value !== 200) return
 
@@ -29,13 +29,15 @@ const scoreStore = (): ScoreStore => {
   }
 
   const createScore: ScoreStore['createScore'] = async () => {
-    const response = await useFetch('http://localhost:3000/score/new').post()
+    const response = await useFetch('http://localhost:4000/score/new').post()
 
     await fetchScores()
+
+    return true
   }
 
   const saveScore: ScoreStore['saveScore'] = async (scoreData) => {
-    const response = await useFetch(`http://localhost:3000/score/${scoreData._id}`).patch(scoreData)
+    const response = await useFetch(`http://localhost:4000/score/${scoreData.id}`).patch(scoreData)
 
     return true
   }
@@ -45,7 +47,7 @@ const scoreStore = (): ScoreStore => {
   }
 
   const selectScore: ScoreStore['selectScore'] = (id) => {
-    selectedScore.value = scores.value.find((score) => score._id === id) ?? null
+    selectedScore.value = scores.value.find((score) => score.id === id) ?? null
     console.log(id)
   }
 
