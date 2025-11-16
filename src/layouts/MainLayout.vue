@@ -3,7 +3,9 @@
     <VAppbar />
     <div class="inner">
       <VSidebar />
-      <slot />
+      <div class="content">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
@@ -23,5 +25,10 @@ import { VSidebar } from '@/components/sidebar'
   display: flex;
   height: calc(100vh - 6.4rem);
   gap: 2rem;
+}
+
+.content {
+  overflow: auto;
+  width: 100%;
 }
 </style>
