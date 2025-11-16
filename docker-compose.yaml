@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tabcreator
+      POSTGRES_PASSWORD: tabcreator
+      POSRGRES_DB: tabcreator
+    ports:
+      - 5000:5432
+
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - 8888:8080
