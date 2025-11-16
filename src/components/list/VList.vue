@@ -19,6 +19,6 @@
   bottom: -0.4rem;
   height: 0.1rem;
   width: 100%;
-  background-color: var(--border-primary);
+  background-color: var(--color-border);
 }
 </style>

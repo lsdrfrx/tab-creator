@@ -23,16 +23,17 @@ defineEmits<{
   border-radius: 0.5rem;
   padding: 0.8rem;
   cursor: pointer;
-  background-color: var(--list-item-bg);
-  color: var(--text-primary);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: all ease-in 0.2s;
 
   &:hover {
-    background-color: var(--list-item-hover);
+    background-color: var(--color-bg-hover);
   }
 
   &.active,
   &:active {
-    background-color: var(--list-item-click);
+    background-color: var(--color-bg-selected);
   }
 }
 </style>
