@@ -1,15 +1,20 @@
 :root {
-  --background-primary: #fff;
-  --text-primary: #111;
+  --color-bg: #f2e6d8;
+  --color-text: #1a1a1a;
 
-  --button-filled-bg: #111;
-  --button-filled-fg: #fff;
-  --button-filled-hover: #282828;
-  --button-filled-click: #444444;
+  --color-accent: #c6a87d;
+  --color-accent-hover: #b99569;
+  --color-accent-active: #a68155;
 
-  --list-item-bg: var(--background-primary);
-  --list-item-hover: #f8f8f8;
-  --list-item-click: #eaeaea;
+  --color-border: #d9cbb8;
+  --color-bg-hover: #e8daca;
+  --color-bg-selected: #dbc4a5;
+  --color-bg-panel: #f7efe5;
 
-  --border-primary: #f0f0f0;
+  --color-btn-bg: #000000;
+  --color-btn-text: var(--color-bg);
+  --color-btn-hover-bg: #2a2a2a;
+
+  --color-scroll-thumb: #c2ad8d;
+  --color-scroll-track: #f2e6d8;
 }
